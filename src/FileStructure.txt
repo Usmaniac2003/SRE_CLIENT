@@ -1,0 +1,141 @@
+src/
+├── app/
+│   ├── layout.tsx
+│   ├── providers.tsx
+│   │
+│   ├── (auth)/
+│   │   └── login/
+│   │       └── page.tsx
+│   │
+│   ├── (dashboard)/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx                # Main dashboard overview
+│   │   │
+│   │   ├── sales/
+│   │   │   └── page.tsx
+│   │   ├── rentals/
+│   │   │   └── page.tsx
+│   │   ├── returns/
+│   │   │   └── page.tsx
+│   │   ├── inventory/
+│   │   │   └── page.tsx
+│   │   ├── users/
+│   │   │   └── page.tsx
+│   │   ├── employees/
+│   │   │   └── page.tsx
+│   │   ├── coupons/
+│   │   │   └── page.tsx
+│   │   └── reports/
+│   │       └── page.tsx
+│   │
+│   └── middleware.ts               # Optional route protection
+│
+├── lib/
+│   ├── api/
+│   │   ├── api.ts                  # Frontend API endpoints (your API constant)
+│   │   ├── apiClient.ts            # Axios instance with interceptors
+│   │   ├── http.ts                 # Generic GET, POST, PATCH wrappers
+│   │   └── index.ts                # Barrel exports
+│   │
+│   ├── auth/
+│   │   ├── token-storage.ts        # Get / set / clear access token
+│   │   └── auth-guard.tsx          # Client side guard component
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.ts
+│   │   ├── useFetch.ts
+│   │   └── useDebounce.ts
+│   │   └── useTheme.ts            # Theme context + hook
+│   │
+│   ├── theme/
+│   │   ├── theme.ts                # Theme constants (colors, spacing, etc.)
+│   │
+│   └── utils/
+│       ├── formatters.ts           # Money, date formatting
+│   └── types/
+│       └── types.ts                # Shared frontend types
+│
+├── store/
+│   ├── auth.store.ts
+│   ├── ui.store.ts
+│   ├── sales.store.ts
+│   ├── rentals.store.ts
+│   └── inventory.store.ts
+│
+├── features/
+│   ├── auth/
+│   │   ├── components/
+│   │   │   └── LoginForm.tsx
+│   │   └── services/
+│   │       └── auth.service.ts
+│   │
+│   ├── employees/
+│   │   ├── components/
+│   │   │   └── EmployeesTable.tsx
+│   │   └── services/
+│   │       └── employees.service.ts
+│   │
+│   ├── users/
+│   │   ├── components/
+│   │   │   └── UsersTable.tsx
+│   │   └── services/
+│   │       └── users.service.ts
+│   │
+│   ├── inventory/
+│   │   ├── components/
+│   │   │   └── InventoryTable.tsx
+│   │   └── services/
+│   │       └── inventory.service.ts
+│   │
+│   ├── coupons/
+│   │   ├── components/
+│   │   │   └── CouponsTable.tsx
+│   │   └── services/
+│   │       └── coupons.service.ts
+│   │
+│   ├── sales/
+│   │   ├── components/
+│   │   │   ├── SalesTable.tsx
+│   │   │   └── SaleForm.tsx
+│   │   └── services/
+│   │       └── sales.service.ts
+│   │
+│   ├── rentals/
+│   │   ├── components/
+│   │   │   └── RentalsTable.tsx
+│   │   └── services/
+│   │       └── rentals.service.ts
+│   │
+│   ├── returns/
+│   │   ├── components/
+│   │   │   └── ReturnsTable.tsx
+│   │   └── services/
+│   │       └── returns.service.ts
+│   │
+│   └── reports/
+│       ├── components/
+│       │   └── ReportsCards.tsx
+│       └── services/
+│           └── reports.service.ts
+│
+├── components/
+│   ├── layout/
+│   │   ├── AppShell.tsx            # Sidebar + Header + Content layout
+│   │   ├── Sidebar.tsx
+│   │   └── TopBar.tsx
+│   │
+│   ├── ui/
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   ├── Select.tsx
+│   │   ├── Card.tsx
+│   │   ├── Table.tsx
+│   │   ├── Modal.tsx
+│   │   └── Spinner.tsx
+│   │
+│   └── feedback/
+│       ├── ToastContainer.tsx
+│       └── ErrorBoundary.tsx
+│
+└── styles/
+    └── globals.css
