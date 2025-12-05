@@ -1,0 +1,21 @@
+import { apiClient } from './apiClient';
+
+export async function get<T>(url: string, params?: unknown): Promise<T> {
+  const response = await apiClient.get<T>(url, { params });
+  return response.data;
+}
+
+export async function post<T, B = unknown>(url: string, body: B): Promise<T> {
+  const response = await apiClient.post<T>(url, body);
+  return response.data;
+}
+
+export async function patch<T, B = unknown>(url: string, body: B): Promise<T> {
+  const response = await apiClient.patch<T>(url, body);
+  return response.data;
+}
+
+export async function del<T>(url: string): Promise<T> {
+  const response = await apiClient.delete<T>(url);
+  return response.data;
+}
