@@ -8,6 +8,7 @@ import { Modal } from '../../../components/ui/Modal';
 
 import {
   fetchReturns,
+  getReturn,
   ReturnRecord,
 } from '../services/returns.service';
 
@@ -60,7 +61,7 @@ export function ReturnsTable() {
       </div>
 
       {/* Return records */}
-      <Table columns={['Type', 'Reference ID', 'Amount', 'Reason', 'Date']}>
+      <Table columns={['Type', 'Reference ID', 'Amount', 'Reason', 'Date', 'Actions']}>
         {returns.map((rec) => (
           <tr key={rec.id} className="border-b border-[#D9E6DF]">
             <td className="px-4 py-2">
@@ -82,6 +83,53 @@ export function ReturnsTable() {
             <td className="px-4 py-2">{rec.reason ?? '-'}</td>
 
             <td className="px-4 py-2">{formatDateTime(rec.createdAt)}</td>
+            <td className="px-4 py-2">
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  try {
+                    const returnDetails = await getReturn(rec.id);
+                    openModal(
+                      <div className="space-y-4">
+                        <h2 className="text-lg font-semibold text-[#1B9C6F]">Return Details</h2>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Return ID:</span>
+                            <span className="font-medium">{returnDetails.id}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Type:</span>
+                            <span className="font-medium">
+                              {returnDetails.type === 'SALE' ? 'Sale Return' : 'Rental Return'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Reference ID:</span>
+                            <span className="font-medium">{returnDetails.saleId ?? returnDetails.rentalId}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Refund Amount:</span>
+                            <span className="font-semibold text-[#1B9C6F]">{formatMoney(returnDetails.amount)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Reason:</span>
+                            <span className="font-medium">{returnDetails.reason ?? 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Date:</span>
+                            <span className="font-medium">{formatDateTime(returnDetails.createdAt)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  } catch (error: any) {
+                    toast.push('error', error?.response?.data?.message || 'Failed to load return details');
+                  }
+                }}
+              >
+                View
+              </Button>
+            </td>
           </tr>
         ))}
       </Table>

@@ -29,6 +29,7 @@ export const API = {
     findAll: '/inventory',
     findOne: (id: number) => `/inventory/${id}`,
     update: (id: number) => `/inventory/${id}`,
+    delete: (id: number) => `/inventory/${id}`,
   },
 
   coupons: {
@@ -45,7 +46,9 @@ export const API = {
     create: '/sales',
     getOne: (id: string) => `/sales/${id}`,
     addItem: (id: string) => `/sales/${id}/add-item`,
+    removeItem: (saleId: string, itemId: string) => `/sales/${saleId}/items/${itemId}`,
     finalize: (id: string) => `/sales/${id}/finalize`,
+    cancel: (id: string) => `/sales/${id}/cancel`,
   },
 
   rentals: {
@@ -53,7 +56,10 @@ export const API = {
     create: '/rentals',
     getOne: (id: string) => `/rentals/${id}`,
     addItem: (id: string) => `/rentals/${id}/add-item`,
+    removeItem: (rentalId: string, itemId: string) => `/rentals/${rentalId}/items/${itemId}`,
     finalize: (id: string) => `/rentals/${id}/finalize`,
+    return: (id: string) => `/rentals/${id}/return`,
+    cancel: (id: string) => `/rentals/${id}/cancel`,
   },
 
   returns: {

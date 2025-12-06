@@ -1,4 +1,4 @@
-import { get, post, patch } from '../../../lib/api/http';
+import { get, post, patch, del } from '../../../lib/api/http';
 import { API } from '../../../lib/api/api';
 
 export interface CreateRentalDto {
@@ -66,9 +66,22 @@ export async function getRental(id: string): Promise<Rental> {
   return await get<Rental>(API.rentals.getOne(id));
 }
 
+export async function removeRentalItem(rentalId: string, itemId: string): Promise<Rental> {
+  await del<void>(API.rentals.removeItem(rentalId, itemId));
+  return await getRental(rentalId); // Fetch updated rental
+}
+
 export async function finalizeRental(
   id: string,
   dto: FinalizeRentalDto,
 ): Promise<Rental> {
   return await patch<Rental, FinalizeRentalDto>(API.rentals.finalize(id), dto);
+}
+
+export async function returnRental(id: string): Promise<Rental> {
+  return await patch<Rental, void>(API.rentals.return(id));
+}
+
+export async function cancelRental(id: string): Promise<Rental> {
+  return await patch<Rental, void>(API.rentals.cancel(id));
 }

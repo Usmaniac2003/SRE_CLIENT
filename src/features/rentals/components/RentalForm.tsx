@@ -9,6 +9,7 @@ import { Spinner } from '../../../components/ui/Spinner';
 import {
   createRental,
   addRentalItem,
+  removeRentalItem,
   finalizeRental,
   Rental,
 } from '../services/rentals.service';
@@ -69,23 +70,35 @@ export function RentalForm({ onSuccess }: RentalFormProps) {
   /* ---------------------------------------------------------------------- */
   /*                          CREATE RENTAL                                  */
   /* ---------------------------------------------------------------------- */
-  async function handleStartRental() {
-    if (!userId) return toast.push('error', 'Select a customer');
-    if (!dueDate) return toast.push('error', 'Select a due date');
+  async function handleStartRental(e?: React.MouseEvent) {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    if (!userId || userId === '') {
+      return toast.push('error', 'Please select a customer');
+    }
+    if (!dueDate || dueDate.trim() === '') {
+      return toast.push('error', 'Please select a due date');
+    }
+
+    if (!auth.user?.id) {
+      return toast.push('error', 'User not authenticated');
+    }
 
     try {
       const created = await createRental({
         userId,
-        employeeId: auth.user?.id ?? '',
+        employeeId: auth.user.id,
         dueDate,
-        deposit,
+        deposit: deposit || 0,
       });
 
       setRental(created);
       toast.push('success', 'Rental created');
 
-    } catch {
-      toast.push('error', 'Failed to create rental');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to create rental';
+      toast.push('error', message);
     }
   }
 
@@ -103,10 +116,29 @@ export function RentalForm({ onSuccess }: RentalFormProps) {
       });
 
       setRental(updated);
+      setItemId(0);
+      setQuantity(1);
       toast.push('success', 'Item added');
 
-    } catch {
-      toast.push('error', 'Failed to add item');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to add item';
+      toast.push('error', message);
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*                        Remove item from rental                          */
+  /* ---------------------------------------------------------------------- */
+  async function handleRemoveItem(itemId: string) {
+    if (!rental) return;
+
+    try {
+      const updated = await removeRentalItem(rental.id, itemId);
+      setRental(updated);
+      toast.push('success', 'Item removed');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to remove item';
+      toast.push('error', message);
     }
   }
 
@@ -154,12 +186,16 @@ export function RentalForm({ onSuccess }: RentalFormProps) {
 
           <Select
             label="Select Customer"
-            options={users.map((u) => ({
-              label: `${u.name} (${u.phone})`,
-              value: u.id,
-            }))}
+            options={[
+              { label: 'Select a customer...', value: '' },
+              ...users.map((u) => ({
+                label: `${u.name} (${u.phone})`,
+                value: u.id,
+              })),
+            ]}
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
+            required
           />
 
           <Input
@@ -176,7 +212,13 @@ export function RentalForm({ onSuccess }: RentalFormProps) {
             onChange={(e) => setDeposit(Number(e.target.value))}
           />
 
-          <Button onClick={handleStartRental}>Create Rental</Button>
+          <Button 
+            type="button"
+            onClick={handleStartRental}
+            disabled={!userId || userId === '' || !dueDate}
+          >
+            Create Rental
+          </Button>
         </div>
       )}
 
@@ -251,7 +293,16 @@ export function RentalForm({ onSuccess }: RentalFormProps) {
                           x{item.quantity} @ {formatMoney(item.unitPrice)}
                         </span>
                       </div>
-                      <div className="font-semibold">{formatMoney(item.lineTotal)}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="font-semibold">{formatMoney(item.lineTotal)}</div>
+                        <Button
+                          variant="danger"
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="text-xs px-2 py-1"
+                        >
+                          Remove
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}

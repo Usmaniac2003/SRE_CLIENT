@@ -1,4 +1,4 @@
-import { get, post, patch } from '../../../lib/api/http';
+import { get, post, patch, del } from '../../../lib/api/http';
 import { API } from '../../../lib/api/api';
 
 export interface CreateItemDto {
@@ -39,4 +39,8 @@ export async function updateItem(
   dto: UpdateItemDto,
 ): Promise<Item> {
   return await patch<Item, UpdateItemDto>(API.inventory.update(id), dto);
+}
+
+export async function deleteItem(id: number): Promise<void> {
+  return await del<void>(API.inventory.delete(id));
 }

@@ -11,6 +11,7 @@ import {
   fetchInventory,
   createItem,
   updateItem,
+  deleteItem,
   Item,
   CreateItemDto,
   UpdateItemDto,
@@ -44,15 +45,20 @@ function CreateItemForm({ onSuccess }: { onSuccess: () => void }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (!form.id || !form.name || form.price < 0 || form.quantity < 0) {
+      return toast.push('error', 'Please fill in all required fields correctly');
+    }
+
     try {
       setLoading(true);
 
       await createItem(form);
-      toast.push('success', 'Item created');
+      toast.push('success', 'Item created successfully');
       closeModal();
       onSuccess();
-    } catch {
-      toast.push('error', 'Failed to create item');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to create item';
+      toast.push('error', message);
     } finally {
       setLoading(false);
     }
@@ -63,31 +69,43 @@ function CreateItemForm({ onSuccess }: { onSuccess: () => void }) {
       <Input
         label="Item ID"
         type="number"
-        value={form.id}
-        onChange={(e) => updateField('id', Number(e.target.value))}
+        min="1"
+        value={form.id || ''}
+        onChange={(e) => updateField('id', Number(e.target.value) || 0)}
+        required
       />
 
       <Input
         label="Name"
         value={form.name}
         onChange={(e) => updateField('name', e.target.value)}
+        required
       />
 
       <Input
         label="Price"
         type="number"
-        value={form.price}
-        onChange={(e) => updateField('price', Number(e.target.value))}
+        min="0"
+        step="0.01"
+        value={form.price || ''}
+        onChange={(e) => updateField('price', Number(e.target.value) || 0)}
+        required
       />
 
       <Input
         label="Quantity"
         type="number"
-        value={form.quantity}
-        onChange={(e) => updateField('quantity', Number(e.target.value))}
+        min="0"
+        value={form.quantity || ''}
+        onChange={(e) => updateField('quantity', Number(e.target.value) || 0)}
+        required
       />
 
-      <Button className="w-full" loading={loading}>
+      <Button
+        className="w-full"
+        loading={loading}
+        disabled={!form.id || !form.name || form.price < 0 || form.quantity < 0}
+      >
         Add Item
       </Button>
     </form>
@@ -123,15 +141,20 @@ function EditItemForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (!form.name || (form.price ?? 0) < 0 || (form.quantity ?? 0) < 0) {
+      return toast.push('error', 'Please fill in all required fields correctly');
+    }
+
     try {
       setLoading(true);
 
       await updateItem(item.id, form);
-      toast.push('success', 'Item updated');
+      toast.push('success', 'Item updated successfully');
       closeModal();
       onSuccess();
-    } catch {
-      toast.push('error', 'Failed to update item');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to update item';
+      toast.push('error', message);
     } finally {
       setLoading(false);
     }
@@ -143,23 +166,33 @@ function EditItemForm({
         label="Name"
         value={form.name ?? ''}
         onChange={(e) => updateField('name', e.target.value)}
+        required
       />
 
       <Input
         label="Price"
         type="number"
+        min="0"
+        step="0.01"
         value={form.price ?? 0}
-        onChange={(e) => updateField('price', Number(e.target.value))}
+        onChange={(e) => updateField('price', Number(e.target.value) || 0)}
+        required
       />
 
       <Input
         label="Quantity"
         type="number"
+        min="0"
         value={form.quantity ?? 0}
-        onChange={(e) => updateField('quantity', Number(e.target.value))}
+        onChange={(e) => updateField('quantity', Number(e.target.value) || 0)}
+        required
       />
 
-      <Button className="w-full" loading={loading}>
+      <Button
+        className="w-full"
+        loading={loading}
+        disabled={!form.name || (form.price ?? 0) < 0 || (form.quantity ?? 0) < 0}
+      >
         Save Changes
       </Button>
     </form>
@@ -201,6 +234,25 @@ export function InventoryTable() {
     openModal(<EditItemForm item={item} onSuccess={loadItems} />);
   }
 
+  async function handleDelete(item: Item) {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${item.name}" (ID: ${item.id})? This action cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteItem(item.id);
+      toast.push('success', 'Item deleted successfully');
+      loadItems();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to delete item';
+      toast.push('error', message);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-10">
@@ -219,14 +271,37 @@ export function InventoryTable() {
         {items.map((item) => (
           <tr key={item.id} className="border-b border-[#D9E6DF]">
             <td className="px-4 py-2">{item.id}</td>
-            <td className="px-4 py-2">{item.name}</td>
+            <td className="px-4 py-2 font-medium">{item.name}</td>
             <td className="px-4 py-2">{formatMoney(item.price)}</td>
-            <td className="px-4 py-2">{item.quantity}</td>
+            <td className="px-4 py-2">
+              <span
+                className={
+                  item.quantity === 0
+                    ? 'text-red-600 font-semibold'
+                    : item.quantity < 10
+                      ? 'text-orange-600 font-medium'
+                      : 'text-gray-700'
+                }
+              >
+                {item.quantity}
+              </span>
+              {item.quantity === 0 && (
+                <span className="ml-2 text-xs text-red-500">(Out of Stock)</span>
+              )}
+              {item.quantity > 0 && item.quantity < 10 && (
+                <span className="ml-2 text-xs text-orange-500">(Low Stock)</span>
+              )}
+            </td>
 
-            <td className="px-4 py-2 flex gap-2">
-              <Button variant="secondary" onClick={() => openEdit(item)}>
-                Edit
-              </Button>
+            <td className="px-4 py-2">
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => openEdit(item)}>
+                  Edit
+                </Button>
+                <Button variant="danger" onClick={() => handleDelete(item)}>
+                  Delete
+                </Button>
+              </div>
             </td>
           </tr>
         ))}
