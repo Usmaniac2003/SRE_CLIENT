@@ -29,7 +29,7 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
   const [loading, setLoading] = useState(true);
 
   // form fields
-  const [itemId, setItemId] = useState<number>(0);
+  const [itemId, setItemId] = useState<number | ''>('');
   const [quantity, setQuantity] = useState<number>(1);
   const [couponCode, setCouponCode] = useState('');
   const [paymentMethod, setPaymentMethod] =
@@ -46,11 +46,13 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
         const list = await fetchInventory();
         setInventory(list);
 
-        const newSale = await createSale({
-          employeeId: auth.user?.id ?? '',
-        });
+        if (auth.user?.id) {
+          const newSale = await createSale({
+            employeeId: auth.user.id,
+          });
 
-        setSale(newSale);
+          setSale(newSale);
+        }
       } catch {
         toast.push('error', 'Failed to start sale');
       } finally {
@@ -58,26 +60,37 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
       }
     }
 
-    init();
-  }, [auth.user, toast]);
+    if (auth.user?.id) {
+      init();
+    }
+  }, [auth.user?.id, toast]);
+
 
   /* ---------------------------------------------------------------------- */
   /*                                Add item                                 */
   /* ---------------------------------------------------------------------- */
   async function handleAddItem() {
     if (!sale) return;
-    if (quantity <= 0) return toast.push('error', 'Quantity must be positive');
+    if (!itemId || itemId === '') {
+      return toast.push('error', 'Please select an item');
+    }
+    if (quantity <= 0) {
+      return toast.push('error', 'Quantity must be positive');
+    }
 
     try {
       const updated = await addSaleItem(sale.id, {
-        itemId,
+        itemId: Number(itemId),
         quantity,
       });
 
       setSale(updated);
+      setItemId('');
+      setQuantity(1);
       toast.push('success', 'Item added');
-    } catch {
-      toast.push('error', 'Failed to add item');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to add item';
+      toast.push('error', message);
     }
   }
 
@@ -86,6 +99,10 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
   /* ---------------------------------------------------------------------- */
   async function handleFinalize() {
     if (!sale) return;
+
+    if (sale.items.length === 0) {
+      return toast.push('error', 'Cannot finalize sale with no items');
+    }
 
     try {
       const finalized = await finalizeSale(sale.id, {
@@ -96,8 +113,9 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
       toast.push('success', 'Sale completed');
       closeModal();
       onSuccess();
-    } catch {
-      toast.push('error', 'Failed to finalize sale');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to finalize sale';
+      toast.push('error', message);
     }
   }
 
@@ -113,68 +131,126 @@ export function SaleForm({ onSuccess }: { onSuccess: () => void }) {
   /*                                Render UI                                */
   /* ---------------------------------------------------------------------- */
   return (
-    <div className="space-y-6">
-      {/* Sale totals */}
+    <div className="space-y-4 max-h-[80vh] overflow-y-auto">
+      {/* Sale totals - always visible at top */}
       <div className="bg-white border border-[#D9E6DF] rounded-lg p-4 shadow-sm">
         <h2 className="text-lg font-semibold text-[#1B9C6F] mb-3">Sale Totals</h2>
-
-        <div className="space-y-1 text-sm">
-          <div>Subtotal: {formatMoney(sale.subtotal)}</div>
-          <div>Tax: {formatMoney(sale.tax)}</div>
-          <div className="font-semibold text-[#1B9C6F]">
-            Total: {formatMoney(sale.total)}
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Subtotal:</span>
+            <div className="font-semibold">{formatMoney(sale.subtotal)}</div>
+          </div>
+          <div>
+            <span className="text-gray-600">Tax:</span>
+            <div className="font-semibold">{formatMoney(sale.tax)}</div>
+          </div>
+          <div>
+            <span className="text-gray-600">Total:</span>
+            <div className="font-semibold text-[#1B9C6F] text-lg">
+              {formatMoney(sale.total)}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Add Item */}
-      <div className="bg-white border border-[#D9E6DF] rounded-lg p-4 space-y-4 shadow-sm">
-        <h3 className="font-semibold text-[#1B9C6F]">Add Item</h3>
+      {/* Main form - horizontal layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Add Item Section */}
+        <div className="bg-white border border-[#D9E6DF] rounded-lg p-4 shadow-sm">
+          <h3 className="font-semibold text-[#1B9C6F] mb-4">Add Item</h3>
+          <div className="space-y-4">
+            <Select
+              label="Item"
+              options={[
+                { label: 'Select an item...', value: '' },
+                ...inventory.map((i) => ({
+                  label: `${i.name} ($${i.price})`,
+                  value: String(i.id),
+                })),
+              ]}
+              value={itemId === '' ? '' : String(itemId)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setItemId(val === '' ? '' : Number(val));
+              }}
+            />
 
-        <Select
-          label="Item"
-          options={inventory.map((i) => ({
-            label: `${i.name} ($${i.price})`,
-            value: i.id,
-          }))}
-          value={itemId}
-          onChange={(e) => setItemId(Number(e.target.value))}
-        />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Quantity"
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+              />
+              <div className="flex items-end">
+                <Button onClick={handleAddItem} className="w-full">
+                  Add to Sale
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <Input
-          label="Quantity"
-          type="number"
-          value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
-        />
+        {/* Payment + Finalize Section */}
+        <div className="bg-white border border-[#D9E6DF] rounded-lg p-4 shadow-sm">
+          <h3 className="font-semibold text-[#1B9C6F] mb-4">Payment & Finalize</h3>
+          <div className="space-y-4">
+            <Select
+              label="Payment Method"
+              value={paymentMethod}
+              options={[
+                { label: 'Cash', value: 'CASH' },
+                { label: 'Credit', value: 'CREDIT' },
+                { label: 'Debit', value: 'DEBIT' },
+                { label: 'Check', value: 'CHECK' },
+              ]}
+              onChange={(e) => setPaymentMethod(e.target.value as any)}
+            />
 
-        <Button onClick={handleAddItem}>Add to Sale</Button>
+            <Input
+              label="Coupon Code (optional)"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              placeholder="Enter coupon code"
+            />
+
+            <Button 
+              variant="primary" 
+              onClick={handleFinalize}
+              className="w-full"
+              disabled={sale.items.length === 0}
+            >
+              Finalize Sale
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Payment + coupon */}
-      <div className="bg-white border border-[#D9E6DF] rounded-lg p-4 space-y-4 shadow-sm">
-        <Select
-          label="Payment Method"
-          value={paymentMethod}
-          options={[
-            { label: 'Cash', value: 'CASH' },
-            { label: 'Credit', value: 'CREDIT' },
-            { label: 'Debit', value: 'DEBIT' },
-            { label: 'Check', value: 'CHECK' },
-          ]}
-          onChange={(e) => setPaymentMethod(e.target.value as any)}
-        />
-
-        <Input
-          label="Coupon Code (optional)"
-          value={couponCode}
-          onChange={(e) => setCouponCode(e.target.value)}
-        />
-
-        <Button variant="primary" onClick={handleFinalize}>
-          Finalize Sale
-        </Button>
-      </div>
+      {/* Sale Items List */}
+      {sale.items.length > 0 && (
+        <div className="bg-white border border-[#D9E6DF] rounded-lg p-4 shadow-sm">
+          <h3 className="font-semibold text-[#1B9C6F] mb-3">Items in Sale</h3>
+          <div className="space-y-2">
+            {sale.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex justify-between items-center py-2 border-b border-[#D9E6DF] last:border-0"
+              >
+                <div>
+                  <span className="font-medium">
+                    {inventory.find((i) => i.id === item.itemId)?.name || `Item ${item.itemId}`}
+                  </span>
+                  <span className="text-sm text-gray-600 ml-2">
+                    x{item.quantity} @ {formatMoney(item.unitPrice)}
+                  </span>
+                </div>
+                <div className="font-semibold">{formatMoney(item.lineTotal)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useUIStore } from '../../store/ui.store';
 import { useAuthStore } from '../../store/auth.store';
 import { usePathname } from 'next/navigation';
@@ -19,8 +20,14 @@ const menu = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const { logout } = useAuthStore();
+
+  function handleLogout() {
+    logout();
+    router.push('/login');
+  }
 
   return (
     <aside
@@ -55,7 +62,7 @@ export function Sidebar() {
 
       {/* LOGOUT */}
       <button
-        onClick={logout}
+        onClick={handleLogout}
         className="m-4 px-4 py-2 rounded-md bg-[#1B9C6F] text-white hover:bg-[#149161] transition"
       >
         {sidebarOpen ? 'Logout' : '⎋'}

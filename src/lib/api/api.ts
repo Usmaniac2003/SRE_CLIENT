@@ -10,7 +10,8 @@ export const API = {
     findAll: '/employees',
     findOne: (id: string) => `/employees/${id}`,
     update: (id: string) => `/employees/${id}`,
-    deactivate: (id: string) => `/employees/${id}`,
+    toggleStatus: (id: string) => `/employees/${id}/toggle-status`,
+    delete: (id: string) => `/employees/${id}`,
   },
 
   users: {
@@ -19,6 +20,7 @@ export const API = {
     findAll: '/users',
     findOne: (id: string) => `/users/${id}`,
     update: (id: string) => `/users/${id}`,
+    delete: (id: string) => `/users/${id}`,
   },
 
   inventory: {
@@ -35,11 +37,13 @@ export const API = {
     findAll: '/coupons',
     findOne: (id: string) => `/coupons/${id}`,
     update: (id: string) => `/coupons/${id}`,
+    delete: (id: string) => `/coupons/${id}`,
   },
 
   sales: {
     base: '/sales',
     create: '/sales',
+    getOne: (id: string) => `/sales/${id}`,
     addItem: (id: string) => `/sales/${id}/add-item`,
     finalize: (id: string) => `/sales/${id}/finalize`,
   },
@@ -47,14 +51,17 @@ export const API = {
   rentals: {
     base: '/rentals',
     create: '/rentals',
+    getOne: (id: string) => `/rentals/${id}`,
     addItem: (id: string) => `/rentals/${id}/add-item`,
     finalize: (id: string) => `/rentals/${id}/finalize`,
   },
 
   returns: {
     base: '/returns',
+    getOne: (id: string) => `/returns/${id}`,
     returnSale: '/returns/sale',
     returnRental: '/returns/rental',
+    calculateLateFee: (rentalId: string) => `/returns/calculate-late-fee/${rentalId}`,
   },
 
   reports: {

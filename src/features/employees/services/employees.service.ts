@@ -41,6 +41,10 @@ export async function updateEmployee(
   return await patch<Employee, UpdateEmployeeDto>(API.employees.update(id), dto);
 }
 
-export async function deactivateEmployee(id: string): Promise<Employee> {
-  return await del<Employee>(API.employees.deactivate(id));
+export async function toggleEmployeeStatus(id: string): Promise<Employee> {
+  return await patch<Employee, void>(API.employees.toggleStatus(id));
+}
+
+export async function deleteEmployee(id: string): Promise<void> {
+  return await del<void>(API.employees.delete(id));
 }

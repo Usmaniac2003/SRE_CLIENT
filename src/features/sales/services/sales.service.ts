@@ -23,6 +23,13 @@ export interface SaleItem {
   lineTotal: number;
 }
 
+export interface ReturnRecord {
+  id: string;
+  type: 'SALE' | 'RENTAL';
+  amount: number;
+  createdAt: string;
+}
+
 export interface Sale {
   id: string;
   subtotal: number;
@@ -31,11 +38,16 @@ export interface Sale {
   paymentMethod: string;
   couponCode?: string;
   items: SaleItem[];
+  returnRecords?: ReturnRecord[];
   createdAt: string;
 }
 
 export async function fetchSales(): Promise<Sale[]> {
   return await get<Sale[]>(API.sales.base);
+}
+
+export async function getSale(id: string): Promise<Sale> {
+  return await get<Sale>(API.sales.getOne(id));
 }
 
 export async function createSale(dto: CreateSaleDto): Promise<Sale> {

@@ -1,4 +1,4 @@
-import { get, post, patch } from '../../../lib/api/http';
+import { get, post, patch, del } from '../../../lib/api/http';
 import { API } from '../../../lib/api/api';
 
 export interface CreateUserDto {
@@ -39,4 +39,8 @@ export async function createUser(dto: CreateUserDto): Promise<User> {
 
 export async function updateUser(id: string, dto: UpdateUserDto): Promise<User> {
   return await patch<User, UpdateUserDto>(API.users.update(id), dto);
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  return await del<void>(API.users.delete(id));
 }

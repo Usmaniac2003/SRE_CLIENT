@@ -183,39 +183,112 @@ export function RentalForm({ onSuccess }: RentalFormProps) {
       {/* Step 2: Add items */}
       {rental && (
         <>
+          {/* Rental Info */}
+          <div className="bg-white border border-[#D9E6DF] p-4 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold text-[#1B9C6F] mb-3">Rental Information</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Rental Number:</span>
+                <span className="font-medium">{rental.rentalNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Due Date:</span>
+                <span className="font-medium">{new Date(rental.dueDate).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Add Item Section */}
           <div className="bg-white border border-[#D9E6DF] p-4 rounded-lg shadow-sm space-y-4">
             <h3 className="text-lg font-semibold text-[#1B9C6F]">Add Item</h3>
 
             <Select
               label="Item"
-              options={inventory.map((i) => ({
-                label: `${i.name} ($${i.price})`,
-                value: i.id,
-              }))}
+              options={[
+                { label: 'Select an item...', value: 0 },
+                ...inventory.map((i) => ({
+                  label: `${i.name} - ${formatMoney(i.price)} (Stock: ${i.quantity})`,
+                  value: i.id,
+                })),
+              ]}
               value={itemId}
               onChange={(e) => setItemId(Number(e.target.value))}
             />
 
-            <Input
-              label="Quantity"
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-            />
-
-            <Button onClick={handleAddItem}>Add To Rental</Button>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Quantity"
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+              />
+              <div className="flex items-end">
+                <Button onClick={handleAddItem} className="w-full" disabled={!itemId || itemId === 0}>
+                  Add To Rental
+                </Button>
+              </div>
+            </div>
           </div>
 
-          {/* Step 3: Totals */}
+          {/* Itemized Charges */}
+          {rental.items && rental.items.length > 0 && (
+            <div className="bg-white border border-[#D9E6DF] p-4 rounded-lg shadow-sm">
+              <h3 className="text-lg font-semibold text-[#1B9C6F] mb-3">Itemized Charges</h3>
+              <div className="space-y-2">
+                {rental.items.map((item) => {
+                  const inventoryItem = inventory.find((i) => i.id === item.itemId);
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex justify-between items-center py-2 border-b border-[#D9E6DF] last:border-0"
+                    >
+                      <div>
+                        <span className="font-medium">
+                          {inventoryItem?.name || `Item ${item.itemId}`}
+                        </span>
+                        <span className="text-sm text-gray-600 ml-2">
+                          x{item.quantity} @ {formatMoney(item.unitPrice)}
+                        </span>
+                      </div>
+                      <div className="font-semibold">{formatMoney(item.lineTotal)}</div>
+                    </div>
+                  );
+                })}
+                <div className="flex justify-between items-center pt-2 border-t-2 border-[#1B9C6F] mt-2">
+                  <span className="font-semibold">Subtotal:</span>
+                  <span className="font-semibold">{formatMoney(rental.total)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Totals Summary */}
           <div className="bg-white border border-[#D9E6DF] p-4 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold text-[#1B9C6F]">Totals</h3>
+            <h3 className="text-lg font-semibold text-[#1B9C6F] mb-3">Payment Summary</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Item Charges:</span>
+                <span className="font-medium">{formatMoney(rental.total)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Deposit:</span>
+                <span className="font-medium">{formatMoney(rental.deposit)}</span>
+              </div>
+              <div className="flex justify-between border-t border-[#D9E6DF] pt-2">
+                <span className="font-semibold">Total Due:</span>
+                <span className="font-semibold text-[#1B9C6F] text-lg">
+                  {formatMoney(rental.total + rental.deposit)}
+                </span>
+              </div>
+            </div>
 
-            <p className="text-sm">Deposit: {formatMoney(rental.deposit)}</p>
-            <p className="text-lg font-semibold text-[#1B9C6F]">
-              Total: {formatMoney(rental.total)}
-            </p>
-
-            <Button variant="primary" className="mt-4 w-full" onClick={handleFinalize}>
+            <Button 
+              variant="primary" 
+              className="mt-4 w-full" 
+              onClick={handleFinalize}
+              disabled={!rental.items || rental.items.length === 0}
+            >
               Finalize Rental
             </Button>
           </div>

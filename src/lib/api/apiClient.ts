@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { tokenStorage } from '../auth/token-storage';
+import { useAuthStore } from '../../store/auth.store';
 
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -27,8 +28,14 @@ apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
     if (error?.response?.status === 401) {
+      // Clear token and logout user on 401 (unauthorized)
       tokenStorage.clear();
-      // Optional: router redirect
+      useAuthStore.getState().logout();
+      
+      // Redirect to login if we're in the browser
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   },

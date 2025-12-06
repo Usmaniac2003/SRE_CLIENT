@@ -11,6 +11,7 @@ import {
   fetchUsers,
   createUser,
   updateUser,
+  deleteUser,
   User,
   CreateUserDto,
   UpdateUserDto,
@@ -61,21 +62,24 @@ function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
         label="Name"
         value={form.name}
         onChange={(e) => updateField('name', e.target.value)}
+        required
       />
 
       <Input
         label="Phone"
         value={form.phone}
         onChange={(e) => updateField('phone', e.target.value)}
+        required
       />
 
       <Input
         label="Email (optional)"
+        type="email"
         value={form.email}
         onChange={(e) => updateField('email', e.target.value)}
       />
 
-      <Button loading={loading} className="w-full">
+      <Button loading={loading} className="w-full" disabled={!form.name || !form.phone}>
         Create User
       </Button>
     </form>
@@ -113,14 +117,37 @@ function EditUserForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    // Validate required fields
+    if (!form.name || !form.phone) {
+      toast.push('error', 'Name and phone are required');
+      return;
+    }
+
     try {
       setLoading(true);
-      await updateUser(user.id, form);
-      toast.push('success', 'User updated');
+      
+      // Prepare data - only include fields that are defined
+      const updateData: UpdateUserDto = {
+        name: form.name,
+        phone: form.phone,
+        email: form.email === '' ? null : (form.email || null),
+        hasCredit: form.hasCredit ?? false,
+      };
+
+      // Only include creditValue if hasCredit is true
+      if (form.hasCredit) {
+        updateData.creditValue = form.creditValue ?? 0;
+      } else {
+        updateData.creditValue = 0;
+      }
+
+      await updateUser(user.id, updateData);
+      toast.push('success', 'User updated successfully');
       closeModal();
       onSuccess();
-    } catch {
-      toast.push('error', 'Failed to update user');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to update user';
+      toast.push('error', message);
     } finally {
       setLoading(false);
     }
@@ -206,6 +233,21 @@ export function UsersTable() {
     openModal(<EditUserForm user={user} onSuccess={loadUsers} />);
   }
 
+  async function handleDelete(user: User) {
+    if (!confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await deleteUser(user.id);
+      toast.push('success', 'User deleted successfully');
+      loadUsers();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to delete user';
+      toast.push('error', message);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-10">
@@ -230,10 +272,15 @@ export function UsersTable() {
               {user.hasCredit ? `$${user.creditValue}` : 'None'}
             </td>
 
-            <td className="px-4 py-2 flex gap-2">
-              <Button variant="secondary" onClick={() => openEdit(user)}>
-                Edit
-              </Button>
+            <td className="px-4 py-2">
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => openEdit(user)}>
+                  Edit
+                </Button>
+                <Button variant="danger" onClick={() => handleDelete(user)}>
+                  Delete
+                </Button>
+              </div>
             </td>
           </tr>
         ))}

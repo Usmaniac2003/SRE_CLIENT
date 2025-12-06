@@ -1,4 +1,4 @@
-import { get, post, patch } from '../../../lib/api/http';
+import { get, post, patch, del } from '../../../lib/api/http';
 import { API } from '../../../lib/api/api';
 
 export interface CreateCouponDto {
@@ -31,4 +31,8 @@ export async function createCoupon(dto: CreateCouponDto): Promise<Coupon> {
 
 export async function updateCoupon(id: string, dto: UpdateCouponDto): Promise<Coupon> {
   return await patch<Coupon, UpdateCouponDto>(API.coupons.update(id), dto);
+}
+
+export async function deleteCoupon(id: string): Promise<void> {
+  return await del<void>(API.coupons.delete(id));
 }

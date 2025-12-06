@@ -6,6 +6,7 @@ export interface CreateRentalDto {
   employeeId: string;
   dueDate: string; // ISO date
   deposit: number;
+  rentalNumber?: string; // Optional, backend will generate if not provided
 }
 
 export interface AddRentalItemDto {
@@ -25,6 +26,13 @@ export interface RentalItem {
   lineTotal: number;
 }
 
+export interface ReturnRecord {
+  id: string;
+  type: 'SALE' | 'RENTAL';
+  amount: number;
+  createdAt: string;
+}
+
 export interface Rental {
   id: string;
   rentalNumber: string;
@@ -35,6 +43,7 @@ export interface Rental {
   dueDate: string;
   returnedAt?: string | null;
   items: RentalItem[];
+  returnRecord?: ReturnRecord | null;
   createdAt: string;
 }
 
@@ -51,6 +60,10 @@ export async function addRentalItem(
   dto: AddRentalItemDto,
 ): Promise<Rental> {
   return await patch<Rental, AddRentalItemDto>(API.rentals.addItem(id), dto);
+}
+
+export async function getRental(id: string): Promise<Rental> {
+  return await get<Rental>(API.rentals.getOne(id));
 }
 
 export async function finalizeRental(
