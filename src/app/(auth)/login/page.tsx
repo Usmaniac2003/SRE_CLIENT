@@ -38,9 +38,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F7FAF8] p-6">
       <div className="w-full max-w-md bg-white shadow-lg border border-[#D9E6DF] rounded-xl p-8">
-        <h1 className="text-2xl font-semibold text-[#1B9C6F] mb-6 text-center">
-          Sign In
-        </h1>
 
         <LoginForm />
       </div>

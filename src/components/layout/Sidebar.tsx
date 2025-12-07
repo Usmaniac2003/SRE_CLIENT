@@ -6,16 +6,26 @@ import { useUIStore } from '../../store/ui.store';
 import { useAuthStore } from '../../store/auth.store';
 import { usePathname } from 'next/navigation';
 
+// Icons
+import {
+  LayoutDashboard,
+  Receipt,
+  ShoppingCart,
+  Boxes,
+  Users,
+  BadgeCheck,
+  TicketPercent,
+  LogOut
+} from 'lucide-react';
+
 const menu = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Sales', path: '/dashboard/sales' },
-  { label: 'Rentals', path: '/dashboard/rentals' },
-  { label: 'Returns', path: '/dashboard/returns' },
-  { label: 'Inventory', path: '/dashboard/inventory' },
-  { label: 'Users', path: '/dashboard/users' },
-  { label: 'Employees', path: '/dashboard/employees' },
-  { label: 'Coupons', path: '/dashboard/coupons' },
-  { label: 'Reports', path: '/dashboard/reports' },
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Sales', path: '/dashboard/sales', icon: Receipt },
+  { label: 'Rentals', path: '/dashboard/rentals', icon: ShoppingCart },
+  { label: 'Inventory', path: '/dashboard/inventory', icon: Boxes },
+  { label: 'Users', path: '/dashboard/users', icon: Users },
+  { label: 'Employees', path: '/dashboard/employees', icon: BadgeCheck },
+  { label: 'Coupons', path: '/dashboard/coupons', icon: TicketPercent },
 ];
 
 export function Sidebar() {
@@ -43,18 +53,21 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto">
         {menu.map((item) => {
           const active = pathname.startsWith(item.path);
+          const Icon = item.icon;
 
           return (
             <Link
               key={item.path}
               href={item.path}
-              className={`block px-4 py-3 rounded-r-lg transition-all ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-r-lg transition-all ${
                 active
                   ? 'bg-[#E7F5EF] text-[#1B9C6F] font-semibold'
                   : 'text-[#4A5A52] hover:bg-[#F0F5F2]'
               }`}
             >
-              {sidebarOpen ? item.label : item.label[0]}
+              <Icon size={20} />
+
+              {sidebarOpen && <span>{item.label}</span>}
             </Link>
           );
         })}
@@ -63,9 +76,10 @@ export function Sidebar() {
       {/* LOGOUT */}
       <button
         onClick={handleLogout}
-        className="m-4 px-4 py-2 rounded-md bg-[#1B9C6F] text-white hover:bg-[#149161] transition"
+        className="m-4 flex items-center gap-3 px-4 py-2 rounded-md bg-[#1B9C6F] text-white hover:bg-[#149161] transition"
       >
-        {sidebarOpen ? 'Logout' : '⎋'}
+        <LogOut size={20} />
+        {sidebarOpen && 'Logout'}
       </button>
     </aside>
   );
